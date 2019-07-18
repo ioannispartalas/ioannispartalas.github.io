@@ -19,8 +19,8 @@ locale                   : "en-US"
 title                    : "Site Title"
 title_separator          : "-"
 subtitle                 : # site tagline that appears below site title in masthead
-name                     : "Your Name"
-description              : "An amazing website."
+name                     : "Ioannis Partalas"
+description              : "Ioannis Partalas, Persona Website, Machine Learning"
 url                      : # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : # the subpath of your site, e.g. "/blog"
 repository               : # GitHub username/repo-name e.g. "mmistakes/minimal-mistakes"
@@ -44,14 +44,14 @@ comments:
     theme                : # "github-light" (default), "github-dark"
     issue_term           : # "pathname" (default)
 staticman:
-  allowedFields          : # ['name', 'email', 'url', 'message']
-  branch                 : # "master"
-  commitMessage          : # "New comment by {fields.name}"
-  filename               : # comment-{@timestamp}
-  format                 : # "yml"
-  moderation             : # true
+  allowedFields          : ['name', 'email', 'url', 'message']
+  branch                 : "master"
+  commitMessage          : "New comment by {fields.name}"
+  filename               : comment-{@timestamp}
+  format                 : "yml"
+  moderation             : true
   path                   : # "/_data/comments/{options.slug}" (default)
-  requiredFields         : # ['name', 'email', 'message']
+  requiredFields         : ['name', 'email', 'message']
   transforms:
     email                : # "md5"
   generatedFields:
@@ -84,7 +84,7 @@ naver_site_verification  :
 
 # Social Sharing
 twitter:
-  username               :
+  username               : "ioannispartalas"
 facebook:
   username               :
   app_id                 :
@@ -107,11 +107,12 @@ analytics:
 
 # Site Author
 author:
-  name             : "Your Name"
+  name             : "Ioannis Partalas"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "I am an amazing person."
-  location         : "Somewhere"
-  email            :
+  bio              : "Lead Data Scientist @ Expedia."
+  location         : "Geneva, Switzerland"
+  email            : "ioannis.partalas@gmail.com"
+  stackover-flow   : "10121533/ioannis"
   links:
     - label: "Email"
       icon: "fas fa-fw fa-envelope-square"
