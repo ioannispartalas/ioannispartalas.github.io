@@ -13,4 +13,4 @@ I work as Machine Learning Scientist at Expedia. You can find my CV in English <
 
 - Natural Language Processing
 - Large-scale learning
-- Sentiment Analysis
+- Cross-lingual classification
