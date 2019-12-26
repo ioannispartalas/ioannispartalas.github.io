@@ -9,7 +9,7 @@ date: 2019-07-18T18:38:52+00:00
 
 For full list of publications please check my [gscholar profile](https://scholar.google.ch/citations?user=c_9-LzMAAAAJ&hl=fr)
 
-* [Wasserstein distances for evaluating cross-lingual embeddings, Optimal Transrpot for Machine Learning](https://arxiv.org/abs/1910.11005), NeurIPS 2019
+* [Wasserstein distances for evaluating cross-lingual embeddings](https://arxiv.org/abs/1910.11005), [Optimal Transrpot for Machine Learning](https://sites.google.com/view/otml2019/), NeurIPS 2019
 * [Hotel2vec: Learning Attribute-Aware Hotel Embeddings with Self-Supervision](https://arxiv.org/abs/1910.03943), arXiv, 2019
 * Aggressive sampling for multi-class to binary reduction with applications to text classification, NeurIPS, 2017
 * Learning Taxonomy Adaptation in Large-scale Classification, Journal of Machine Learning Research, 2016
