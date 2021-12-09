@@ -109,7 +109,7 @@ analytics:
 author:
   name             : "Ioannis Partalas"
   avatar           : # path of avatar image, e.g. "/assets/images/bio-photo.jpg"
-  bio              : "Lead Data Scientist @ Expedia."
+  bio              : "Principal Machine Learning Scientist @ Expedia Group."
   location         : "Geneva, Switzerland"
   email            : "ipartalas@ik.me"
   stackover-flow   : "10121533/ioannis"
