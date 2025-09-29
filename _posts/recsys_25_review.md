@@ -1,0 +1,96 @@
+# Recsys 2025 Recap
+I had a great week at the [ACM RecSys Conference](https://recsys.acm.org/recsys25/) in Prague! The program was packed with amazing talks, and many exciting ideas on the future of recommendation systems.
+Many interesting approaches, from foundational work to more recent advances of LLMs on recommendation systems.
+
+I presented a paper on cross-brand recommendations at the [RecTour 2025 Workshop on Recommenders in Tourism](https://workshops.ds-ifs.tuwien.ac.at/rectour25/committees/). 
+In this blogpost, I will do a short break-down of my paper as well as selected ones from the conference.
+
+## Aligning Hotel Embeddings for Cross-Brand Recommendations 
+
+The core problem we tackled in this paper was on effectively leveraging knowledge from multiple brands in order to enable cross-brand recommendations. These brands often target different customers or are local, but they share the same line of business. For example, Expedia Group operates multiple brands. 
+In the past we have introduced [hotel2vec](https://ceur-ws.org/Vol-2974/paper5.pdf) which learns hotel embeddings leveraging user co-occurrence data.
+
+To enable cross-brand recommendations we could use either brand and perform zero-shot recommendations but would lead to lower performances.
+Another approach would be to align the embedding spaces of the two brands.
+In our paper, we built upon the hotel2vec model and introduced a simple yet powerful technique to achieve this alignment: regularized domain adaptation.
+
+
+### Simple Regularization
+The original hotel2vec model minimizes a loss function, $J(\theta)$, based on the skip-gram pairs of clicked hotels. The idea is to train the target brand model by minimizing the following **regularized loss function**:
+
+$$J_{t}(\theta)=J(\theta)+\lambda||V_{h_{t}}^{T}-V_{h_{t}}^{s}||_{2}^{2}$$
+
+where **$V_{h_{t}}^{T}$** is the he embedding of a hotel $h_{t}$ in the **target** domain, **$V_{h_{t}}^{s}$** the **frozen** embedding of the same/similar hotel to $h_{t}$ from the **source** brand. $\lambda$ is the regularization parameter, which controls how much knowledge we want to transfer.
+This term forces the target embeddings to align with the source ones, effectively transferring knowledge from the source brand.
+
+### Results
+We tested this approach on a real-world task: next-hotel prediction using click sessions from two of our brands (Brand A and Brand B).
+* Better Performance: Our regularized approach didn't just align the spaces; it often outperformed the original models trained only on a single brand's data! For example, when using Brand B as the source for Brand A (B→A), we saw an increase of over 10% in Hits@100 (with λ=0.01). This suggests that transferring knowledge helps fill in gaps and learn a better similarity space.
+* Faster Training: The proposed regularization scheme helped the models converge much faster, cutting training time by 50%!
+
+In short, our simple regularization framework provides an effective and efficient way to leverage hotel embeddings across different brands, leading to better and faster recommendations!
+
+## Stabilizing Embedding Spaces
+
+Embeddings are fundamental in many tasks in a recommender systems pipeline. For example, they are used for fast retrieval or as input to search and recommendation models. Usually, these are fixed and retraining them would create problems for the downstream models, as the new space will look different. How then to allow for regular updates without requiring the retrain of downstream models?
+
+The authors in the paper [Orthogonal Low-Rank Embedding Stabilization](https://dl.acm.org/doi/10.1145/3705328.3748141) propose to map the embeddings to a standardized space by following two steps:
+- First, use SVD to transform the embeddings to a canonical space. This is a crucial step as between runs the SVD basis will be the same unless the underlying user behavior changes. As, SVD is impractical on the large raw data, the authors perform a QR decomposition on the smaller embedding matrices T and W.
+- Fix a reference stable basis **S_ref** from the previous step. Re-run the first step with the new embeddings to get the new basis **S_new**. Then apply the orthogonal [Procrustes algorithm](https://en.wikipedia.org/wiki/Orthogonal_Procrustes_problem) to learn the transformation that aligns the two basis: 
+
+Note here, that orthogonality is required in order to preserve the dot product. 
+
+### Why it matters
+
+Stabilizing embeddings is an important problem as it can allow for smooth retraining and integration with downstream tasks without comprising predictive performance. More often retrains of the base embeddings, allows for capturing user patterns and accommodating for new items that enter the inventory. Usually, for cold start items one has to employ an imputation strategy which may lead to sub-optimal embeddings. The approach presented in the paper is a post-processing one and is straightforward to integrate to a downstream pipeline.
+
+### Final thoughts
+
+I found this approach quite appealing and practical. You can always use as reference the last training step of the embeddings. However, the authors did not provide any result on downstream tasks to be able to assess the overall impact.
+
+Also, in case where the items in the inventory do not change too often it may not be necessary to have such an approach as one can always adopt a plan with few retrains of the embeddings which can be simple versioned. On the other hand, if the inventory updates frequently the adoption of such an approach can alleviate the need for retraining downstream tasks that rely on embeddings.
+
+## Improving Sampled Softmax for Large-Scale Classification
+
+Typical recommender systems need to be trained over large catalog items under a multi-class classification task. A typical loss that is used is Sampled Softmax as full Softmax is very expensive for large catalogs.
+Often, negatives are selected within the batch which introduces bias for popular items are as they are sampled more often, making the model over-penalize them.
+To fix this bias, a common practice is the LogQ Correction, where the raw score is adjusted by subtracting the item's log-probability of being sampled, $logQ(j)$.
+
+The authors in [Correcting the LogQ Correction: Revisiting Sampled Softmax for Large-Scale Retrieval](https://dl.acm.org/doi/10.1145/3705328.3748033) propose an improved version of LogQ correction to take into account the fact that the positive item is always included in the sampled items which creates an extra bias.
+
+
+### The Correction of LogQ correction
+The paper's core contribution is deriving the an unbiased gradient for the sampled softmax loss. The idea is to correct the bias using the model's actual belief about the item's relevance.
+Specifically, the authors introduce the following weight in the loss function:
+
+$$ sg[1-P_{\theta}(p|u)] $$
+where $sg$ is the stop-gradient operator and $P_{\theta}(p|u))$ is the current estimation of the relavancy of item $p$ given the user $u$ which is calculated using importance sampling:
+
+$$P_{\theta}(p|u)=\frac{e^{f_{\theta}(p,u)}}{e^{f_{\theta}(p,u)} + \frac{1}{N} \sum_i^N e^{f_{\theta}(d_i,u) - \log Q^{'}(d_i)}}, d_i \sim Q(d) $$
+
+The authors use for the weight correction and the LogQ correction the same in-batch negatives for computational efficiency.
+
+### Why it matters
+
+Training retrieval models as extreme multi-class classifiers is a typical approach on recommendation pipelines. Improving the selection over these large catalog items can have big impact on user satisfaction and on-line metrics. 
+
+### Final thoughts
+
+Quite eager to try this approach! In the experimental part, while the authors mention that sampling from the full inventory it will be less informative, probably due to selecting easy negatives, in cases where your item catalog is in the order of few millions, it should be quite accurate. On the other hand for larger catalogs the above correction in combination with a mixed negative strategy seems to do the trick.
+
+
+## Foundational Embedding Models
+
+In the paper “PinFM: Foundation Model for User Activity Sequences at a Billion-scale Visual Discovery Platform” (https://dl.acm.org/doi/10.1145/3705328.3748050) the authors introduce a foundation embedding model (pre-trained) which they fine-tune in downstream tasks. This is a different paradigm in recommender systems where typically, embeddings are produced once and stored in a cash for feature retrieval in the downstream task.
+
+This model, which is a Transformer,  is trained for next-action prediction task which is also very typical for pre-trained models, but also introduces extra tasks for future based actions. Once trained, the foundational model can be fine-tuned for downstream tasks like ranking or recommendation ones, by including the candidate items in the input (early fusion).
+
+To enable fast inference, the authors pre-calculate the Transformer output on the users’ historical actions and cache them. Then, during inference the candidate item are evaluated against the cached key-values of each Transformer layer.
+
+### Why it matters
+
+Being able to allow for fine-tuning on downstream tasks is key to unlock performance gains over traditional frozen embedding models. The recommendation pipelines pose some unique challenges, and the authors present an elegant way of addressing each point and scale both training and inference.
+
+### Final thoughts
+
+This paper is a must read. I believe such foundational models can be extremely powerful for downstream tasks. As, this is still ID-based cold-start is an important problem and I would be eager to explore how to leverage other developments like Semantic-IDs for enhancing such foundation models.
